@@ -7,179 +7,43 @@ import json
 
 import matplotlib.pyplot as plt
 
-import utilities_SDGA as utils
+import utilities as utils
 
-from random import Random 
+from random import Random
 import numpy as np
 
-opt_lb = 0.
-opt_ub = 10.
-
-class Optimization(object):
-
-    def __init__(self, evaluator, bounds):
-
-        self.bounds = bounds
-        self.evaluator = evaluator
-        self.LTM = []
-
-    def bounder(self, candidate, *args):
-        for ii, c in enumerate(candidate):
-            candidate[ii] = max(min(c, opt_ub), opt_lb)
-        return candidate
-
-    def scaleCandidateToDV(self, candidate):
-        return [(c/10)*(self.bounds[i][1] - self.bounds[i][0]) +
-                self.bounds[i][0] for i, c in enumerate(candidate)]
-
-    def scaleDVToCandidate(self, design_variables):
-        return [10.*(x - self.bounds[i][0])/(self.bounds[i][1] -
-                self.bounds[i][0]) for i, x in enumerate(design_variables)]
-
-    def evalCandidate(self, candidate):
-        visited_cands = [d.candidate for d in self.LTM]
-        if candidate in visited_cands:
-            other = copy.copy(self.LTM[visited_cands.index(candidate)])
-            ind = Individual(candidate=candidate)
-            samples = other.stochastic.samples
-            ind.stochastic = Stochastic(samples=samples, stype=self.stype)
-        else:
-            ind = Individual(candidate=candidate)
-            samples = self.evaluator(self.scaleCandidateToDV(candidate))
-            ind.stochastic = Stochastic(samples=samples, stype=self.stype)
-            self.LTM.append(ind)
-
-        return ind
-
-    def removeDominatedPoints(self, A, memory):
-        out_memory = copy.copy(memory)
-        for B in memory:
-            if A < B:
-                out_memory.remove(B)
-        return out_memory
-
-    def addIfNotDominated(self, A, memory):
-
-        if len(memory) == 0:
-            memory.append(A)
-            return True
-
-        for B in memory:
-            if B < A:
-                return False
-            elif B == A:
-                return False
-
-        memory.append(A)
-        return True
-
-
-class Individual(object):
-    """Represents an individual in an evolutionary computation.
-
-    An individual is defined by its candidate solution and the
-    fitness (or value) of that candidate solution.
-
-    Public Attributes:
-
-    - *candidate* -- the candidate solution
-    - *stochastic* -- the stochastic behaviour of the candidate, including
-      which measures are of interest and the appropriate comparison. The
-      required data is samples of the quantity of interest at the design
-      specified by the candidate property.
-    - *birthdate* -- the system time at which the individual was created
-
-    """
-    def __init__(self, candidate=None):
-        self.candidate = candidate
-        self.stochastic = None
-        self.birthdate = time.time()
-        self.sigma = 0.1
-        self.alpha = 0.0
-
-    def __setattr__(self, name, val):
-        if name == 'candidate':
-            self.__dict__[name] = val
-            self.stochastic = None
-        else:
-            self.__dict__[name] = val
-
-    def __str__(self):
-        return '%s' % str(self.candidate)
-
-    def __repr__(self):
-        return 'candidate = %s, stats = (%s), birthdate = %s' %  \
-                (str(self.candidate), str(self.stochastic), str(self.birthdate))
-
-    def __lt__(self, other):
-        if self.stochastic is not None and other.stochastic is not None:
-            return self.stochastic < other.stochastic
-        else:
-            raise Exception('stochastic samples of candidate is not defined')
-
-    def __le__(self, other):
-        return self < other or not other < self
-
-    def __gt__(self, other):
-        if self.stochastic is not None and other.stochastic is not None:
-            return other < self
-        else:
-            raise Exception('stochastic is not defined')
-
-    def __ge__(self, other):
-        return other < self or not self < other
-
-    def __eq__(self, other):
-        tol = 1e-7
-        if (np.linalg.norm(np.array(self.candidate) - np.array(other.candidate))
-                < tol):
-            return True
-        else:
-            return False
-
-    def __ne__(self, other):
-        return self.candidate != other.candidate
 
 
 class Stochastic(object):
-    """Represents a solution which can be compared for types of dominance"""
+    """Represents an design's performance through stochastic samples
+    """
 
-    def __init__(self, samples=[], stype='MV'):
-        self.samples = samples
+    def __init__(self, design=None, samples=None, stype='MV'):
+        self.design = design
+        self.samples = None
         self.mean = None
         self.std = None
         self.CDF = None
         self.supCDF = None
         self.stype = stype # SD for stochastic dominance or MV for mean var
 
-        self.compute_stats()  # Automatically compute mean and std
-        self.compute_CDF()  # Don't automatically sort for CDF to save time
+        self.samples = samples
+        self.compute_stats(samples)
+        self.compute_CDF(samples)
 
-    def compute_stats(self):
-        """Evaluate mean and variance from statistics"""
-        self.mean = np.mean(np.array(self.samples))
-        self.std = np.sqrt(np.var(np.array(self.samples)))
 
-    def compute_CDF(self):
-        """Order samples to give the ECDF in the form of a list of tuples of
-        (q_value, CDF_value)"""
-        self.CDF = []
-        sorted_samples = np.sort(self.samples)
-        M = float(len(self.samples))
-        for ii, samp in enumerate(sorted_samples):
-            tupl = (samp, float(ii)/M + 0.5/M)
-            self.CDF.append(tupl)
+    def __setattr__(self, name, val):
+        if name == 'design':
+            self.__dict__[name] = val
+            self.stochastic = None
+        else:
+            self.__dict__[name] = val
 
-    def compute_supCDF(self):
-        if self.CDF is None:
-            self.compute_CDF()
-        M = float(len(self.samples))
+    def __str__(self):
+        return 'Stochastic with stats ['+str(self.mean)+', '+str(self.std)+']'
 
-        self.supCDF = []
-        for ii, (quantile, h) in enumerate(self.CDF):
-            qsum = sum([tup[0] for tup in self.CDF[ii:]])
-            supquant = qsum/(M-ii)
-            self.supCDF.append((supquant, h))
+    def __repr__(self):
+        return 'Stochastic with stats ['+str(self.mean)+', '+str(self.std)+']'
 
     def __lt__(self, other):
         if isinstance(self.stype, basestring):
@@ -214,58 +78,94 @@ class Stochastic(object):
     def __ge__(self, other):
         return other < self or not self < other
 
-    def __str__(self):
-        return 'Mean: ' + str(self.mean) + '  Std: ' + str(self.std)
+    def __eq__(self, other):
+        tol = 1e-7
+        if (np.linalg.norm(np.array(self.design) - np.array(other.design))
+                < tol):
+            return True
+        else:
+            return False
 
-    def __repr__(self):
-        return 'Mean: ' + str(self.mean) + '  Std: ' + str(self.std)
+    def __ne__(self, other):
+        return self.design != other.design
 
-    def ZSDcompare(self, cand, other):
 
-        if cand.CDF is None or other.CDF is None:
-            if max(cand.samples) < min(other.samples):
+    def compute_stats(self, samps=None):
+        """Evaluate mean and variance from statistics"""
+        if samps is None:
+            samps = self.samples
+        self.mean = np.mean(np.array(samps))
+        self.std = np.sqrt(np.var(np.array(samps)))
+
+    def compute_CDF(self, samps=None):
+        """Order samples to give the ECDF in the form of a list of tuples of
+        (q_value, CDF_value)"""
+        if samps is None:
+            samps = self.samples
+        self.CDF = []
+        sorted_samples = np.sort(samps)
+        M = float(len(samps))
+        for ii, samp in enumerate(sorted_samples):
+            tupl = (samp, float(ii)/M + 0.5/M)
+            self.CDF.append(tupl)
+
+    def compute_supCDF(self):
+        if self.CDF is None:
+            self.compute_CDF()
+        M = float(len(self.samples))
+
+        self.supCDF = []
+        for ii, (quantile, h) in enumerate(self.CDF):
+            qsum = sum([tup[0] for tup in self.CDF[ii:]])
+            supquant = qsum/(M-ii)
+            self.supCDF.append((supquant, h))
+
+    def ZSDcompare(self, design, other):
+
+        if design.CDF is None or other.CDF is None:
+            if max(design.samples) < min(other.samples):
                 return 1
             else:
                 return 0
 
         else:
-            if cand.CDF[-1][0] < other.CDF[0][0]:
+            if design.CDF[-1][0] < other.CDF[0][0]:
                 return 1
             else:
                 return 0
 
-    def FSDcompare(self, cand, other):
-        """Compares two candidates for stochastic dominance, uses the
+    def FSDcompare(self, design, other):
+        """Compares two designs for stochastic dominance, uses the
         empirical CDF for comparison based off samples.
 
         - 1 for 1st argument dominating, 0 otherwise
         """
 
-        if len(cand.samples) != len(other.samples):
-            raise Exception('Number of samples of two candidates must be equal')
+        if len(design.samples) != len(other.samples):
+            raise Exception('Number of samples of two designs must be equal')
         else:
-            M = len(cand.samples)
+            M = len(design.samples)
 
         # For now assume a fixed number of samples
-        if cand.CDF is None:
-            cand.compute_CDF()
+        if design.CDF is None:
+            design.compute_CDF()
 
         if other.CDF is None:
             other.compute_CDF()
 
-        ## cand cannot cominate other if mean or worst case are inferior
-        if other.mean < cand.mean:
+        ## design cannot cominate other if mean or worst case are inferior
+        if other.mean < design.mean:
             return 0
-        if other.CDF[-1][0] < cand.CDF[-1][0]:
+        if other.CDF[-1][0] < design.CDF[-1][0]:
             return 0
 
         hlims = [0.0, 1.0]
         b1dominating, b2dominating = True, True
         for ii in range(M):
-            if cand.CDF[ii][1] >= hlims[0] and cand.CDF[ii][1] <= hlims[1]:
-                if cand.CDF[ii][0] < other.CDF[ii][0]:
+            if design.CDF[ii][1] >= hlims[0] and design.CDF[ii][1] <= hlims[1]:
+                if design.CDF[ii][0] < other.CDF[ii][0]:
                     b2dominating = False
-                if other.CDF[ii][0] < cand.CDF[ii][0]:
+                if other.CDF[ii][0] < design.CDF[ii][0]:
                     b1dominating = False
 
         if b1dominating and not b2dominating:
@@ -273,55 +173,46 @@ class Stochastic(object):
         else:
             return 0
 
-    def SSDcompare(self, cand, other):
-        """Compares two candidates for 2nd order stochastic dominance, uses the
+    def SSDcompare(self, design, other):
+        """Compares two designs for 2nd order stochastic dominance, uses the
         empirical CDF for comparison based off samples.
 
         returns 1 for 1st argument dominating, 2 for 2nd argument, 0 for draw.
         """
 
-        if len(cand.samples) != len(other.samples):
-            raise Exception('Number of samples of two candidates must be equal')
+        if len(design.samples) != len(other.samples):
+            raise Exception('Number of samples of two designs must be equal')
         else:
-            M = len(cand.samples)
+            M = len(design.samples)
 
         # For now assume a fixed number of samples
-        if cand.CDF is None:
-            cand.compute_CDF()
+        if design.CDF is None:
+            design.compute_CDF()
 
         if other.CDF is None:
             other.compute_CDF()
 
-        if cand.supCDF is None:
-            cand.compute_supCDF()
+        if design.supCDF is None:
+            design.compute_supCDF()
 
         if other.supCDF is None:
             other.compute_supCDF()
 
-        ## cand cannot cominate other if mean or worst case are inferior
-        if other.mean < cand.mean:
+        ## design cannot cominate other if mean or worst case are inferior
+        if other.mean < design.mean:
             return 0
-        if other.CDF[-1][0] < cand.CDF[-1][0]:
+        if other.CDF[-1][0] < design.CDF[-1][0]:
             return 0
 
 
         hlims = [0.0, 1.0]
         b1dominating, b2dominating = True, True
         for ii in range(M):
-            if cand.supCDF[ii][1] >= hlims[0] and cand.supCDF[ii][1] <= hlims[1]:
-                if cand.supCDF[ii][0] < other.supCDF[ii][0]:
+            if design.supCDF[ii][1] >= hlims[0] and design.supCDF[ii][1] <= hlims[1]:
+                if design.supCDF[ii][0] < other.supCDF[ii][0]:
                     b2dominating = False
-                if other.supCDF[ii][0] < cand.supCDF[ii][0]:
+                if other.supCDF[ii][0] < design.supCDF[ii][0]:
                     b1dominating = False
-
-#        plt.figure()
-#        plt.plot(np.array(cand.CDF)[:, 0], np.array(cand.CDF)[:, 1], 'b')
-#        plt.plot(np.array(cand.supCDF)[:, 0], np.array(cand.supCDF)[:, 1], 'b:')
-#        plt.plot(np.array(other.CDF)[:, 0], np.array(other.CDF)[:, 1], 'r')
-#        plt.plot(np.array(other.supCDF)[:, 0], np.array(other.supCDF)[:, 1], 'r:')
-#        plt.show()
-
-#        pdb.set_trace()
 
         if b1dominating and not b2dominating:
             return 1
@@ -329,100 +220,24 @@ class Stochastic(object):
             return 0
 
 
-    def MVcompare(self, cand, other):
-        """Compares candidates using Pareto dominance of mean and std
+    def MVcompare(self, design, other):
+        """Compares designs using Pareto dominance of mean and std
         """
 
-        if cand.mean is None or cand.std is None:
-            cand.compute_stats()
+        if design.mean is None or design.std is None:
+            design.compute_stats()
         if other.mean is None or other.std is None:
             other.compute_stats()
 
-        if (cand.mean < other.mean and cand.std <= other.std) or \
-                (cand.mean <= other.mean and cand.std < other.std):
+        if (design.mean < other.mean and design.std <= other.std) or \
+                (design.mean <= other.mean and design.std < other.std):
             return 1
-        elif (other.mean < cand.mean and other.std <= cand.std) or \
-                (other.mean <= cand.mean and other.std < cand.std):
+        elif (other.mean < design.mean and other.std <= design.std) or \
+                (other.mean <= design.mean and other.std < design.std):
             return 2
         else:
             return 0
 
-
-class Bounder(object):
-    """Defines a basic bounding function for numeric lists.
-
-    This callable class acts as a function that bounds a 
-    numeric list between the lower and upper bounds specified.
-    These bounds can be single values or lists of values. For
-    instance, if the candidate is composed of five values, each
-    of which should be bounded between 0 and 1, you can say
-    ``Bounder([0, 0, 0, 0, 0], [1, 1, 1, 1, 1])`` or just
-    ``Bounder(0, 1)``. If either the ``lower_bound`` or 
-    ``upper_bound`` argument is ``None``, the Bounder leaves 
-    the candidate unchanged (which is the default behavior).
-
-    Public Attributes:
-
-    - *lower_bound* -- the lower bound for a candidate
-    - *upper_bound* -- the upper bound for a candidate
-
-    """
-    def __init__(self, lower_bound=None, upper_bound=None):
-        self.lower_bound = lower_bound
-        self.upper_bound = upper_bound
-        if self.lower_bound is not None and self.upper_bound is not None:
-            try:
-                iter(self.lower_bound)
-            except TypeError:
-                self.lower_bound = itertools.repeat(self.lower_bound)
-            try:
-                iter(self.upper_bound)
-            except TypeError:
-                self.upper_bound = itertools.repeat(self.upper_bound)
-
-    def __call__(self, candidate, args):
-        # The default would be to leave the candidate alone
-        # unless both bounds are specified.
-        if self.lower_bound is None or self.upper_bound is None:
-            return candidate
-        else:
-            try:
-                iter(self.lower_bound)
-            except TypeError:
-                self.lower_bound = [self.lower_bound] * len(candidate)
-            try:
-                iter(self.upper_bound)
-            except TypeError:
-                self.upper_bound = [self.upper_bound] * len(candidate)
-            bounded_candidate = copy.copy(candidate)
-            for i, (c, lo, hi) in enumerate(
-                    zip(candidate, self.lower_bound, self.upper_bound)):
-                bounded_candidate[i] = max(min(c, hi), lo)
-            return bounded_candidate
-
-def measureHyperVolume(front, ref):
-    if len(front) > 0:
-
-        pfront = [[i.stochastic.mean, i.stochastic.std] for i in front]
-        sinds = np.argsort(np.array(pfront)[:, 0])
-        sfront = [pfront[ind] for ind in sinds]
-
-        p = sfront[0]
-        prev_y = ref[1]
-        now_y = min(p[1], ref[1])
-        now_x = min(p[0], ref[0])
-        hv = abs(ref[0] - now_x)*abs(prev_y - now_y)
-
-        for ip, p in enumerate(sfront[1:]):
-            prev_y = min(sfront[ip][1], ref[1])
-            now_y = min(p[1], ref[1])
-            now_x = min(p[0], ref[0])
-
-            hv += abs(ref[0] - now_x)*abs(prev_y - now_y)
-
-        return hv
-    else:
-        return 0
 
 def measureAvgDistance(front, filename):
 
@@ -454,17 +269,38 @@ def measureAvgDistance(front, filename):
     else:
         return 0
 
-def measureBestPoint(front):
+def saveArchive(front, name):
+    l = []
+    for p in front:
+        d = {'design': p.design,
+            'mean': p.mean,
+            'std': p.std,
+            'CDF': p.CDF}
+        l.append(d)
 
-    if len(front) > 0:
+    with open('output/' + str(name) + '.txt', 'w') as f:
+        f.write(json.dumps(l))
 
-        min_dist = np.infty
+def readArchive(name):
+    arch = []
+    with open(name, 'r') as f:
+        jdicts = json.loads(f.readlines()[0])
+        for d in jdicts:
+#            objs = d['objectives']
+#            dv = d['design']
+#            samps = [tup[0] for tup in d['CDF']]
+#            assert(abs(objs[0] - np.mean(samps)) < 1e-12)
+#            assert(abs(objs[1] - np.std(samps)) < 1e-12)
+#            ind = Stochastic(dv, samps)
+#            ind.mean = objs[0]
+#            ind.std = objs[1]
+#            ind.CDF = d['CDF']
+            arch.append(d)
 
-        for p in front:
-            distance = np.linalg.norm([p.stochastic.mean, p.stochastic.std])
-            if distance < min_dist:
-                min_dist = 1.*distance
+    for ip, ind in enumerate(arch):
+        if abs(ind['mean']) > 1e2 or abs(ind['std']) > 1e2:
+            arch[ip]['mean'] = 1e2
+            arch[ip]['std'] = 1e2
+            arch[ip]['CDF'] = [[1e2, 0], [1e2, 1]]
 
-        return min_dist
-    else:
-        return 0
+    return arch

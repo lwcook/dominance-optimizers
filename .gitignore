@@ -1,9 +1,10 @@
-.swp
-.swo
-.pyc
+*.swp
+*.swo
+*.pyc
 
-.eggs
+*.eggs
 
 *.sh
 
+*_old.py
 _trystuff.py
