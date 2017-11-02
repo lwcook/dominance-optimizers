@@ -9,6 +9,16 @@ import matplotlib.pyplot as plt
 from optimizers import Optimization, Point
 
 class TabuSearch(Optimization):
+    """Tabu search for non-dominance based optimization.
+
+    :param function evaluator: Function that takes a vector of design variables
+        and returns an object that can be compared via < and == operators.
+
+    :param list bounds: List of bounds on design variables in the form
+        [(l0, u0), (l1, u1), ..., (ln, un)] where lb, uk are the lower and upper
+        bounds on the kth design variable respectively.
+
+    """
 
     def __init__(self, evaluator, bounds,
             max_points=200, verbose=False,
@@ -42,12 +52,20 @@ class TabuSearch(Optimization):
         return len(self.LTM) > self.max_points
 
     def optimize(self, dv0, verbose=None, restart_data=None):
+        """Performs the genetic algorithm optimization.
+
+        :param list dv0: Initial design vector
+
+        :return: Archive of non-dominated points obtained by the
+                optimization.
+        :rtype: List of Point objects
+        """
 
         if verbose is None:
             verbose = self.verbose
 
         x0 = self.scaleDVtoX(dv0)
-        base = self.pointFromX(x0)
+        base = self.pointFromX(self.bounder(x0))
         counter = 0
         move = 'hookejeeves'
         added_to_MTM = False

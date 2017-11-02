@@ -14,7 +14,16 @@ from optimizers import Optimization
 
 class GeneticAlgorithm(Optimization):
     """Evolutionary computation representing the nondominated
-    sorting genetic algorithm under uncertainty.  """
+    sorting genetic algorithm under uncertainty.
+
+    :param function evaluator: Function that takes a vector of design variables
+        and returns an object that can be compared via < and == operators.
+
+    :param list bounds: List of bounds on design variables in the form
+        [(l0, u0), (l1, u1), ..., (ln, un)] where lb, uk are the lower and upper
+        bounds on the kth design variable respectively.
+
+    """
 
     def __init__(self, evaluator, bounds,
             population_size=100, max_generations=50,
@@ -41,7 +50,16 @@ class GeneticAlgorithm(Optimization):
 
 
     def optimize(self, seeds=[]):
-        """Perform the evolution."""
+        """Performs the genetic algorithm optimization.
+
+        :param list seeds: List of initial design vectors to use as seeds in
+            the optimization. Only the first population_size will be used.
+
+
+        :return: Archive of non-dominated points obtained by the
+                optimization.
+        :rtype: List of Point objects
+        """
 
         self.population = []
 
@@ -57,7 +75,7 @@ class GeneticAlgorithm(Optimization):
             seeds = [seeds]
 
         initial_dvs = list(seeds)
-        initial_xs = [self.scaleDVtoX(dvs) for dvs in initial_dvs]
+        initial_xs = self.bounder([self.scaleDVtoX(dv) for dv in initial_dvs])
 
         num_generated = max(self.population_size - len(seeds), 0)
         i = 0

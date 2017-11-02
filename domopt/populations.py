@@ -91,15 +91,12 @@ class Stochastic(object):
 
 
     def compute_stats(self, samps=None):
-        """Evaluate mean and variance from statistics"""
         if samps is None:
             samps = self.samples
         self.mean = np.mean(np.array(samps))
         self.std = np.sqrt(np.var(np.array(samps)))
 
     def compute_CDF(self, samps=None):
-        """Order samples to give the ECDF in the form of a list of tuples of
-        (q_value, CDF_value)"""
         if samps is None:
             samps = self.samples
         self.CDF = []
@@ -121,6 +118,9 @@ class Stochastic(object):
             self.supCDF.append((supquant, h))
 
     def ZSDcompare(self, design, other):
+        """Compares two designs for zeroth order stochastic dominance
+            using the minimum and maximum of the samples.
+        """
 
         if design.CDF is None or other.CDF is None:
             if max(design.samples) < min(other.samples):
@@ -135,10 +135,8 @@ class Stochastic(object):
                 return 0
 
     def FSDcompare(self, design, other):
-        """Compares two designs for stochastic dominance, uses the
-        empirical CDF for comparison based off samples.
-
-        - 1 for 1st argument dominating, 0 otherwise
+        """Compares two designs for first order stochastic dominance
+            using the empirical quantile function for comparison.
         """
 
         if len(design.samples) != len(other.samples):
@@ -174,10 +172,8 @@ class Stochastic(object):
             return 0
 
     def SSDcompare(self, design, other):
-        """Compares two designs for 2nd order stochastic dominance, uses the
-        empirical CDF for comparison based off samples.
-
-        returns 1 for 1st argument dominating, 2 for 2nd argument, 0 for draw.
+        """Compares two designs for first order stochastic dominance
+            using the empirical superquantile function for comparison.
         """
 
         if len(design.samples) != len(other.samples):
@@ -221,7 +217,8 @@ class Stochastic(object):
 
 
     def MVcompare(self, design, other):
-        """Compares designs using Pareto dominance of mean and std
+        """Compares designs using Pareto dominance using the sample
+             mean and standard deviation
         """
 
         if design.mean is None or design.std is None:

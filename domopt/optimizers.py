@@ -5,9 +5,9 @@ class Point(object):
     It can be called as a tuple, corresponding to (x, f)
 
     :param list x: Object representing the design that the optimization
-        manipulates
-    :param object f: Object that measures performance provided to the
-        optimization, it must have the < and == operators defined.
+        manipulates, i.e. scaled design variables
+    :param object f: Object that measures performance,
+        it must have the < and == operators defined.
 
     """
     def __init__(self, x, f):
@@ -31,7 +31,7 @@ class Point(object):
         return self.f == other.f
 
 class Optimization(object):
-    """Optimization for dealing with populations of designs.
+    """Base class for optimziations operating on Point objects.
 
     Designs are stored as Point objects - the first entry is what the optimizer
     controls (i.e. scaled design variables), the second entry is an object
