@@ -3,6 +3,7 @@
 *.pyc
 
 *.eggs
+dominance_optimizers.egg-info/*
 
 *.sh
 
