@@ -4,6 +4,7 @@ import copy
 import time
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 from optimizers import Optimization, Point
 

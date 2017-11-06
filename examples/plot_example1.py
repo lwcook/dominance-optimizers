@@ -3,6 +3,7 @@ import sys
 import os
 import pdb
 import numpy as np
+
 import matplotlib.pyplot as plt
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__),
@@ -11,6 +12,15 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__),
 import utilities as utils
 
 from populations import readArchive
+
+def savefig(name='saved_fig', bSaveBase=False,
+            base='/phd-thesis/Figs/', bSaveData=False, formatstr='pdf'):
+    '''Function that saves the plot as well as the
+    underlying data of the currently open figure:
+    -name: string that the figure is saved as'''
+
+    subprocess.call(["mkdir", "-p", "./figs/"])
+    plt.savefig('./figs/'+str(name)+'.' + formatstr, format=formatstr)
 
 def plot_points(alg, stype, **args):
     name = 'output/'+str(alg)+'_'+stype+'_points.txt'
@@ -71,7 +81,7 @@ def main():
     plt.ylabel('Standard Deviation')
     plt.title('Tabu Search')
     plt.tight_layout()
-    utils.savefig('GA_fronts')
+    savefig('GA_fronts')
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
     plt.sca(ax1)
@@ -97,7 +107,7 @@ def main():
     plt.ylabel('Standard Deviation')
     plt.title('Tabu Search')
     plt.tight_layout()
-    utils.savefig('GA_fronts')
+    savefig('GA_fronts')
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
     plt.sca(ax1)
@@ -123,7 +133,7 @@ def main():
     plt.ylabel('CDF')
     plt.title('Tabu Search')
     plt.tight_layout()
-    utils.savefig('GA_CDFs')
+    savefig('GA_CDFs')
 
 
 

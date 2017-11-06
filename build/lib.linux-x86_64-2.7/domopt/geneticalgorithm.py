@@ -4,6 +4,7 @@ import pdb
 from random import Random
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 from optimizers import Optimization
 

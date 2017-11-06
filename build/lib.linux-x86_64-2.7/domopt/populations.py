@@ -5,6 +5,8 @@ import copy
 import pdb
 import json
 
+import matplotlib.pyplot as plt
+
 import utilities as utils
 
 from random import Random
