@@ -269,11 +269,5 @@ def savefig(name='saved_fig', bSaveBase=False,
     underlying data of the currently open figure:
     -name: string that the figure is saved as'''
 
-    date = datetime.datetime.now()
-    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-
     subprocess.call(["mkdir", "-p", "./figs/"])
-#    plt.savefig('./output/' + str(name) + '.pdf', format='pdf')
-    plt.savefig('./figs/' +  str(name) + '_' + str(date.day) +
-                months[date.month-1] + '.' + formatstr, format=formatstr)
+    plt.savefig('./figs/'+str(name)+'.' + formatstr, format=formatstr)

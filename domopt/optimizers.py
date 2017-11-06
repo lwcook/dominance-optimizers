@@ -43,13 +43,6 @@ class Optimization(object):
 
     The optimizer scales the design variables to range over [0,10] so that
     an algorithm's methods operate over an appropriate scaled space.
-
-    :param function evaluator: function that takes a list of design variables
-        (that are contained within the bounds) and returns an object that
-        must have the comparison operators < and ==
-    :param list bounds: list of bounds on the design variables in the form
-        [(l0, u0), (l1, u1), ..., (ln, un)], where li and ui are the lower and
-        upper bounds on the ith design variable.
     """
 
     def __init__(self, evaluator, bounds):
@@ -60,6 +53,8 @@ class Optimization(object):
 
         self.opt_ub = 10.0
         self.opt_lb = 0.0
+
+        self.num_evaluations = 0
 
     @property
     def bounds(self):
@@ -74,12 +69,6 @@ class Optimization(object):
             ubs.append(u)
         self._lbs = lbs
         self._ubs = ubs
-
-#    def bounder(self, x):
-#        bounded_x = copy.copy(x)
-#        for i, (c, l, u) in enumerate(zip(x, self._lbs, self._ubs)):
-#            bounded_x[i] = max(min(c, u), l)
-#        return bounded_x
 
     def bounder(self, x):
         bounded_x = copy.copy(x)
@@ -97,11 +86,12 @@ class Optimization(object):
                 (dvi - self.bounds[i][0])/(self.bounds[i][1] - self.bounds[i][0]))
                 for i, dvi in enumerate(design_variables)]
 
+    def evalDV(self, x):
+        self.num_evaluations += 1
+        return self.evaluator(DV)
+
     def evalX(self, x):
         return self.evaluator(self.scaleXtoDV(x))
-
-    def evalDV(self, x):
-        return self.evaluator(DV)
 
     def pointFromX(self, x):
         x = [xi for xi in x]

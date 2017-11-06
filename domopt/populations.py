@@ -16,28 +16,51 @@ import numpy as np
 
 class Stochastic(object):
     """Represents an design's performance through stochastic samples
+
+    :param list design: list of design variables determining the design
+    :param list samples: list of samples of the quantity of interest evaluated
+        at the given design variables
+    :param str criteria: dominance criteria to use to compare the performance of
+        different designs. It can be a string (one of 'mv', 'zsd', 'fsd',
+        'ssd') or a list of strings of these types.
     """
 
-    def __init__(self, design=None, samples=None, stype='MV'):
+    def __init__(self, design=None, samples=None, criteria='MV'):
         self.design = design
         self.samples = None
         self.mean = None
         self.std = None
         self.CDF = None
         self.supCDF = None
-        self.stype = stype # SD for stochastic dominance or MV for mean var
+        self.criteria = criteria # SD for stochastic dominance or MV for mean var
 
         self.samples = samples
         self.compute_stats(samples)
         self.compute_CDF(samples)
 
 
-    def __setattr__(self, name, val):
-        if name == 'design':
-            self.__dict__[name] = val
-            self.stochastic = None
+    @property
+    def criteria(self):
+        return self._criteria
+
+    @criteria.setter
+    def criteria(self, val):
+        val = val.lower()
+        err_str = 'Unsupported dominance criteria'
+        if isinstance(val, basestring):
+            if val not in ['mv', 'zsd', 'fsd', 'ssd']:
+                raise ValueError(err_str)
+            else:
+                self._criteria = val
         else:
-            self.__dict__[name] = val
+            try:
+                iter(val)
+                for v in val:
+                    if v not in ['mv', 'zsd', 'fsd', 'ssd']:
+                        raise ValueError(err_str)
+                self._criteria = val
+            except:
+                raise TypeError('Argument must be string or list of strings')
 
     def __str__(self):
         return 'Stochastic with stats ['+str(self.mean)+', '+str(self.std)+']'
@@ -46,13 +69,13 @@ class Stochastic(object):
         return 'Stochastic with stats ['+str(self.mean)+', '+str(self.std)+']'
 
     def __lt__(self, other):
-        if isinstance(self.stype, basestring):
-            stypes = [self.stype.lower()]
+        if isinstance(self.criteria, basestring):
+            criteria = [self.criteria.lower()]
         else:
-            stypes = [s.lower() for s in self.stype]
+            criteria = [s.lower() for s in self.criteria]
 
         # If dominates under any criterion, return dominating
-        for s in stypes:
+        for s in criteria:
             if s == 'zsd':
                 if self.ZSDcompare(self, other) == 1:
                     return True

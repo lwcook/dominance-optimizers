@@ -70,8 +70,24 @@ it must have the &lt; and == operators defined.</li>
 
 <dl class="class">
 <dt id="domopt.Stochastic">
-<em class="property">class </em><tt class="descclassname">domopt.</tt><tt class="descname">Stochastic</tt><big>(</big><em>design=None</em>, <em>samples=None</em>, <em>stype='MV'</em><big>)</big><a class="headerlink" href="#domopt.Stochastic" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">domopt.</tt><tt class="descname">Stochastic</tt><big>(</big><em>design=None</em>, <em>samples=None</em>, <em>criteria='MV'</em><big>)</big><a class="headerlink" href="#domopt.Stochastic" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents an design&#8217;s performance through stochastic samples</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>design</strong> (<em>list</em>) &#8211; list of design variables determining the design</li>
+<li><strong>samples</strong> (<em>list</em>) &#8211; list of samples of the quantity of interest evaluated
+at the given design variables</li>
+<li><strong>criteria</strong> (<em>str</em>) &#8211; dominance criteria to use to compare the performance of
+different designs. It can be a string (one of &#8216;mv&#8217;, &#8216;zsd&#8217;, &#8216;fsd&#8217;,
+&#8216;ssd&#8217;) or a list of strings of these types.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 <dl class="method">
 <dt id="domopt.Stochastic.FSDcompare">
 <tt class="descname">FSDcompare</tt><big>(</big><em>design</em>, <em>other</em><big>)</big><a class="headerlink" href="#domopt.Stochastic.FSDcompare" title="Permalink to this definition">¶</a></dt>
@@ -165,7 +181,7 @@ bounds on the kth design variable respectively.</li>
 </table>
 <dl class="method">
 <dt id="domopt.TabuSearch.optimize">
-<tt class="descname">optimize</tt><big>(</big><em>dv0</em>, <em>verbose=None</em>, <em>restart_data=None</em><big>)</big><a class="headerlink" href="#domopt.TabuSearch.optimize" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">optimize</tt><big>(</big><em>dv0=None</em>, <em>verbose=None</em><big>)</big><a class="headerlink" href="#domopt.TabuSearch.optimize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Performs the genetic algorithm optimization.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -196,22 +212,6 @@ it must have a comparison operator.</p>
 general non-dominance criteria to be used.</p>
 <p>The optimizer scales the design variables to range over [0,10] so that
 an algorithm&#8217;s methods operate over an appropriate scaled space.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>evaluator</strong> (<em>function</em>) &#8211; function that takes a list of design variables
-(that are contained within the bounds) and returns an object that
-must have the comparison operators &lt; and ==</li>
-<li><strong>bounds</strong> (<em>list</em>) &#8211; list of bounds on the design variables in the form
-[(l0, u0), (l1, u1), ..., (ln, un)], where li and ui are the lower and
-upper bounds on the ith design variable.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 <div class="toctree-wrapper compound">

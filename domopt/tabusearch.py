@@ -51,7 +51,7 @@ class TabuSearch(Optimization):
     def shouldTerminate(self):
         return len(self.LTM) > self.max_points
 
-    def optimize(self, dv0, verbose=None, restart_data=None):
+    def optimize(self, dv0=None, verbose=None):
         """Performs the genetic algorithm optimization.
 
         :param list dv0: Initial design vector
@@ -61,10 +61,15 @@ class TabuSearch(Optimization):
         :rtype: List of Point objects
         """
 
+        if dv0 is None:
+            x0 = [np.random.uniform(self.opt_lb, self.opt_ub) for _ in
+                    self.bounds]
+        else:
+            x0 = self.scaleDVtoX(dv0)
+
         if verbose is None:
             verbose = self.verbose
 
-        x0 = self.scaleDVtoX(dv0)
         base = self.pointFromX(self.bounder(x0))
         counter = 0
         move = 'hookejeeves'
@@ -166,6 +171,7 @@ class TabuSearch(Optimization):
         return self.MTM
 
     def doLocalSearch(self, base_point, search_method=None):
+        assert isinstance(base_point, Point)
         base_x, base_f = base_point[0], base_point[1]
         x0 = np.array(base_x).flatten()
         xdim = x0.size
@@ -214,6 +220,8 @@ class TabuSearch(Optimization):
         return best_points, visited_points
 
     def doPatternMove(self, current_point, last_point):
+        assert isinstance(current_point, Point)
+        assert isinstance(last_point, Point)
         current_x, current_f = current_point[0], current_point[1]
         last_x, last_f = last_point[0], last_point[1]
 

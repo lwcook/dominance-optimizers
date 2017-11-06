@@ -30,7 +30,7 @@ def qfunc(x, u):
 def run(stype='mv', bplot=False):
 
     # Here we use the same set of samples for each optimization for fair comparison
-    with open('algebraic_test_usamples.txt', 'r') as f:
+    with open('input/example1_usamples.txt', 'r') as f:
         us = json.loads(f.readlines()[0])
 
     # The evaluator method returns an object that measures the performance

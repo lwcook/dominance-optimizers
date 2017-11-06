@@ -6,5 +6,8 @@
 
 *.sh
 
+examples/output/*
+examples/figs/*
+
 *_old.py
 _trystuff.py

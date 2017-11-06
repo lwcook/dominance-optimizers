@@ -1,14 +1,10 @@
 import time
-import itertools
 import math
-import copy
 import pdb
-
 from random import Random
+
 import numpy as np
 import matplotlib.pyplot as plt
-
-import utilities as utils
 
 from optimizers import Optimization
 
@@ -36,14 +32,10 @@ class GeneticAlgorithm(Optimization):
 
         self.population_size = population_size
         self.max_generations = max_generations
-        self.archive = None
-        self.population = None
-        self.num_evaluations = 0
-        self.num_generations = 0
 
-        self.mutation_rate = 0.1
+        self.mutation_rate = 0.15
         self.crossover_rate = 0.9
-        self.stdv = 0.1
+        self.stdev = 0.6
         self.mean = 0.0
 
         self.verbose = verbose
@@ -55,128 +47,96 @@ class GeneticAlgorithm(Optimization):
         :param list seeds: List of initial design vectors to use as seeds in
             the optimization. Only the first population_size will be used.
 
-
         :return: Archive of non-dominated points obtained by the
                 optimization.
         :rtype: List of Point objects
         """
 
         self.population = []
-
         self.archive = []
         self.LTM = []
 
-        evaluator = self.evaluator
+        self.num_generations = 0
+        self.num_evaluations = 0  # is incremented by self.PointFromX()
 
         # Create the initial population.
-        try:
-            iter(seeds)
-        except TypeError:
-            seeds = [seeds]
+        initial_xs = [self.bounder(self.scaleDVtoX(dv)) for dv in seeds]
+        while len(initial_xs) < self.population_size:
+            initial_xs.append([self._random.uniform(self.opt_lb, self.opt_ub)
+                                for _ in self.bounds])
 
-        initial_dvs = list(seeds)
-        initial_xs = self.bounder([self.scaleDVtoX(dv) for dv in initial_dvs])
-
-        num_generated = max(self.population_size - len(seeds), 0)
-        i = 0
-        while i < num_generated:
-
-            dvs = [self._random.uniform(l, u) for l, u in self.bounds]
-            xs = self.scaleDVtoX(dvs)
-            if xs not in initial_xs:
-                initial_xs.append(xs)
-                i += 1
-
-        self.population = [self.pointFromX(xs) for xs in
+        self.population = [self.pointFromX(x) for x in
                            initial_xs[0:self.population_size]]
-
-        self.num_evaluations = len(self.population)
-        self.num_generations = 0
-
-        for point in self.population:
-            added_to_archive = self.addIfNotDominated(point, self.archive)
-            self.archive = self.removeDominatedPoints(point, self.archive)
 
         ##############################################################
         # MAIN LOOP
         ##############################################################
-        while self.num_generations < self.max_generations:
-#
-            self.num_generations += 1
-            if self.verbose:
-                print 'Generation: ', self.num_generations
-
-            # Temperature decreasing encouraging less exploring as time goes on.
-            T = 1 - float(self.num_generations) /  \
-                (self.max_generations+1)
-            self.crossover_rate = 0.9
-            self.mutation_rate = 0.2 - 0.05*T
-            self.stdev = 0.6 + 0.2*T
-
-            parents = self.doTournamentSelection(self.population)
-
-            child_xs = [copy.deepcopy(point[0]) for point in parents]
-            child_xs = self.doBlendCrossover(child_xs)
-            child_xs = self.doGaussianMutation(child_xs)
-
-            children = [self.pointFromX(x) for x in child_xs]
-            self.num_evaluations += len(children)
-
-            self.population = self.doReplacement(self.population, children)
+        while True:
 
             # Archive individuals.
             for point in self.population:
                 added_to_archive = self.addIfNotDominated(point, self.archive)
                 self.archive = self.removeDominatedPoints(point, self.archive)
 
+            if self.num_generations >= self.max_generations:
+                break
+            self.num_generations += 1
+
+            if self.verbose:
+                print 'Generation: ', self.num_generations
+
+            parents = self.doTournamentSelection(self.population)
+            child_xs = [point[0] for point in parents]  # get x from Point
+
+            child_xs = self.doBlendCrossover(child_xs)
+            child_xs = self.doGaussianMutation(child_xs)
+
+            children = [self.pointFromX(x) for x in child_xs]
+
+            self.population = self.doReplacement(self.population, children)
+
+
         return self.archive
 
 
     def doTournamentSelection(self, population):
         tsize = 2
-        selected = [min(self._random.sample(population, tsize))
+        return [min(self._random.sample(population, tsize))
                         for _ in population]
-        return selected
 
-    def doBlendCrossover(self, designs):
+    def doBlendCrossover(self, xs):
 
-        xs = list(designs)
-        if len(xs) % 2 == 1:
-            xs = xs[:-1]
         self._random.shuffle(xs)
-        moms = xs[::2]
-        dads = xs[1::2]
         new_xs = []
 
-        for mom, dad in zip(moms, dads):
+        for ii in range(math.trunc(0.5*len(xs))):
+            p1, p2 = xs[2*ii], xs[2*ii+1]
             if self._random.random() < self.crossover_rate:
-                bro = []
-                sis = []
-                for (xi, yi) in zip(mom, dad):
-                    smallest = min(xi, yi)
-                    largest = max(xi, yi)
-                    delta = 0.1 * (largest - smallest)
-                    bro_val = smallest - delta + self._random.random() * \
-                            (largest - smallest + 2 * delta)
-                    sis_val = smallest - delta + self._random.random() * \
-                            (largest - smallest + 2 * delta)
-                    bro.append(bro_val)
-                    sis.append(sis_val)
-                new_xs.append(self.bounder(bro))
-                new_xs.append(self.bounder(sis))
+                c1, c2 = [], []
+                for (xi, yi) in zip(p1, p2):
+                    a, b, delt = min(xi, yi), max(xi, yi), 0.1*abs(xi-yi)
+                    c1.append(self._random.uniform(a-delt, b+delt))
+                    c2.append(self._random.uniform(a-delt, b+delt))
+
+                new_xs.append(self.bounder(c1))
+                new_xs.append(self.bounder(c2))
             else:
-                new_xs.append(mom)
-                new_xs.append(dad)
+                new_xs.append(p1)
+                new_xs.append(p2)
+
         return new_xs
 
-    def doGaussianMutation(self, designs):
-
-        new_xs = list(designs)
-        for j, design in enumerate(designs):
-            for i, _ in enumerate(design):
+    def doGaussianMutation(self, xs):
+        new_xs = []
+        for x in xs:
+            new_x = []
+            for ii, xi in enumerate(x):
                 if self._random.random() < self.mutation_rate:
-                    design[i] += self._random.gauss(self.mean, self.stdev)
-            new_xs[j] = self.bounder(design)
+                    new_x.append(xi + self._random.gauss(self.mean,
+                        self.stdev))
+                else:
+                    new_x.append(xi)
+            new_xs.append(self.bounder(new_x))
         return new_xs
 
     def doReplacement(self, population, offspring):
@@ -226,8 +186,8 @@ def sortByCrowdingDistance(front):
     ## mean and standard deviation by sorting a list of dictionaries that keeps
     ## track of the indices in the original front
     pdicts.sort(key=lambda p: p['point'][1].std)
-    distances[pdicts[0]['index']] = float('inf')
-    distances[pdicts[-1]['index']] = float('inf')
+    distances[pdicts[0]['index']] = np.inf
+    distances[pdicts[-1]['index']] = np.inf
     for i in range(1, num_points-1):
         distances[pdicts[i]['index']] += \
         (pdicts[i+1]['point'][1].std - pdicts[i-1]['point'][1].std)
@@ -239,7 +199,7 @@ def sortByCrowdingDistance(front):
 
     indices = range(num_points)
     indices.sort(key=lambda i: distances[i], reverse=True)
-    crowd = [front[i] for i in indices]
+    sorted_dists = [front[i] for i in indices]
 
-    return crowd
+    return sorted_dists
 
