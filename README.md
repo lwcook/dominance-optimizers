@@ -13,7 +13,7 @@ Cook, L. W. and Jarrett, J. P. "Using Stochastic Dominance in Multi-Objective Op
 
 **Installation Instructions**
 
-1) Download this repository as a .zip file and extract the contents, clone this repository, or dowload this repository as a .tar.gz file from https://github.com/lwcook/dominance-optimizers/archive/0.4.targ.gz and extract the contents.
+1) Download this repository as a .zip file and extract the contents, clone this repository, or dowload this repository as a .tar.gz file from https://github.com/lwcook/dominance-optimizers/archive/0.4.tar.gz and extract the contents.
 
 2) Move to the location of the package, and from the root directory (i.e. PATH/TO/EXTRACT/dominance-optimizers-x.y), install the package with "python setup.py install".
 Please ensure you have the appropriate permissions for your machine (e.g. by using "sudo" in linux based systems).
