@@ -20,8 +20,7 @@ class TabuSearch(Optimization):
     """
 
     def __init__(self, evaluator, bounds,
-            max_points=200, verbose=False,
-            search_method='exhaustive'):
+            max_points=200, verbose=False, search_method='exhaustive'):
 
         super(TabuSearch, self).__init__(evaluator, bounds)
 

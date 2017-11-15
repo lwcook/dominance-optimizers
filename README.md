@@ -6,7 +6,7 @@ This python module implements versions of a genetic algorithm and a tabu search 
 This is achieved by defining an object that overrides the less than comparison operator to use in the optimizations.
 
 **Documenation**
-Documentation (built using sphinx), is available at https://www-edc.cam.ac.uk/aerotools/dominanceoptimizers/documentation
+Documentation (built using sphinx), is available at https://www-edc.eng.cam.ac.uk/aerotools/dominanceoptimizers/documentation
 
 In the examples folder are scripts to recreate results from the publication:
 Cook, L. W. and Jarrett, J. P. "Using Stochastic Dominance in Multi-Objective Optimizers for Aerospace Design Under Uncertainty".
