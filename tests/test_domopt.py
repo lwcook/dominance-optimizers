@@ -44,6 +44,9 @@ class DomOptTest(unittest.TestCase):
         p1 = Point(0, 1)
         p2 = Point(0, 2)
 
+        print repr(p1)
+        print str(p1)
+
         x, f = p1[0], p1[1]
 
         self.assertTrue(p1 < p2)
@@ -57,12 +60,20 @@ class DomOptTest(unittest.TestCase):
         self.assertEqual(p1, p2)
         self.assertTrue(p1 < p2)
 
+        with self.assertRaises(ValueError):
+            s =  Stochastic([0, 0], samples1, criteria='bad')
+
+        with self.assertRaises(ValueError):
+            s =  Stochastic([0, 0], samples1, criteria=['bad1', 'bad2'])
+
+        p1 = Point([0, 0], Stochastic([0, 0], samples1, criteria='zsd'))
+
         p1 = Point([0, 0], Stochastic([0, 0], samples1, criteria='zsd'))
         p2 = Point([0, 0], Stochastic([0, 0], samples2, criteria='zsd'))
         self.assertFalse(p1 < p2)
 
-        p1 = Point([0, 0], Stochastic([0, 0], samples1, criteria='fsd'))
-        p2 = Point([0, 0], Stochastic([0, 0], samples2, criteria='fsd'))
+        p1 = Point([0, 0], Stochastic([0, 0], samples1, criteria=['fsd', 'mv']))
+        p2 = Point([0, 0], Stochastic([0, 0], samples2, criteria=['fsd', 'mv']))
         self.assertTrue(p1 < p2)
 
         p1 = Point([0, 0], Stochastic([0, 0], samples1, criteria='ssd'))
@@ -94,6 +105,13 @@ class DomOptTest(unittest.TestCase):
         self.assertTrue(p1 in memory)
         self.assertFalse(p2 in memory)
 
+        def observer(point, archive, history):
+            a = point
+            b = archive[0]
+            c = history[-1]
+
+        theOpt = Optimization(evaluator, bounds, observer)
+
     def testAlgorithms(self):
 
         def evaluator(design):
@@ -101,13 +119,19 @@ class DomOptTest(unittest.TestCase):
             f = Stochastic(design, samples, criteria='mv')
             return f
 
+        def observer(point, archive, history):
+            a = point
+            b = len(archive)
+            c = len(history)
+
         bounds = [(-5, -4), (-5, -4)]
 
-        TS = TabuSearch(evaluator, bounds, max_points=10, verbose=False)
+        TS = TabuSearch(evaluator, bounds, observer=observer,
+                max_points=100, verbose=True)
         TS.optimize()
 
-        GA = GeneticAlgorithm(evaluator, bounds, population_size=2,
-                max_generations=2, verbose=False)
+        GA = GeneticAlgorithm(evaluator, bounds, observer=observer,
+                population_size=10, max_generations=10, verbose=True)
         GA.optimize()
 
 

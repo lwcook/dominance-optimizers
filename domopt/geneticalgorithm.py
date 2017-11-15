@@ -10,21 +10,13 @@ from optimizers import Optimization
 class GeneticAlgorithm(Optimization):
     """Evolutionary computation representing the nondominated
     sorting genetic algorithm under uncertainty.
-
-    :param function evaluator: Function that takes a vector of design variables
-        and returns an object that can be compared via < and == operators.
-
-    :param list bounds: List of bounds on design variables in the form
-        [(l0, u0), (l1, u1), ..., (ln, un)] where lb, uk are the lower and upper
-        bounds on the kth design variable respectively.
-
     """
 
-    def __init__(self, evaluator, bounds,
+    def __init__(self, evaluator, bounds, observer=None,
             population_size=100, max_generations=50,
             verbose=False):
 
-        super(GeneticAlgorithm, self).__init__(evaluator, bounds)
+        super(GeneticAlgorithm, self).__init__(evaluator, bounds, observer)
 
         self._random = Random()
         self._random.seed(time.time())
@@ -52,8 +44,8 @@ class GeneticAlgorithm(Optimization):
         """
 
         self.population = []
+        self.history = []
         self.archive = []
-        self.LTM = []
 
         self.num_generations = 0
         self.num_evaluations = 0  # is incremented by self.PointFromX()
@@ -72,11 +64,6 @@ class GeneticAlgorithm(Optimization):
         ##############################################################
         while True:
 
-            # Archive individuals.
-            for point in self.population:
-                added_to_archive = self.addIfNotDominated(point, self.archive)
-                self.archive = self.removeDominatedPoints(point, self.archive)
-
             if self.num_generations >= self.max_generations:
                 break
             self.num_generations += 1
@@ -90,7 +77,7 @@ class GeneticAlgorithm(Optimization):
             child_xs = self.doBlendCrossover(child_xs)
             child_xs = self.doGaussianMutation(child_xs)
 
-            children = [self.pointFromX(x) for x in child_xs]
+            children = [self.pointFromX(x, bArchive=True) for x in child_xs]
 
             self.population = self.doReplacement(self.population, children)
 

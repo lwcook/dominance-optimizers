@@ -35,7 +35,7 @@ class Stochastic(object):
         self.samples = samples
         self.compute_stats(samples)
         self.compute_CDF(samples)
-
+        self.compute_supCDF(samples)
 
     @property
     def criteria(self):
@@ -43,20 +43,21 @@ class Stochastic(object):
 
     @criteria.setter
     def criteria(self, val):
-        val = val.lower()
         err_str = 'Unsupported dominance criteria'
         if isinstance(val, basestring):
-            if val not in ['mv', 'zsd', 'fsd', 'ssd']:
+            if val.lower() not in ['mv', 'zsd', 'fsd', 'ssd']:
                 raise ValueError(err_str)
             else:
-                self._criteria = val
+                self._criteria = val.lower()
         else:
             try:
                 iter(val)
                 for v in val:
-                    if v not in ['mv', 'zsd', 'fsd', 'ssd']:
+                    if v.lower() not in ['mv', 'zsd', 'fsd', 'ssd']:
                         raise ValueError(err_str)
-                self._criteria = val
+                self._criteria = [vi.lower() for vi in val]
+            except ValueError:
+                raise ValueError(err_str)
             except:
                 raise TypeError('Argument must be string or list of strings')
 
@@ -127,10 +128,13 @@ class Stochastic(object):
             tupl = (samp, float(ii)/M + 0.5/M)
             self.CDF.append(tupl)
 
-    def compute_supCDF(self):
+    def compute_supCDF(self, samps=None):
+        if samps is None:
+            samps = self.samples
         if self.CDF is None:
-            self.compute_CDF()
-        M = float(len(self.samples))
+            self.compute_CDF(samps)
+
+        M = float(len(samps))
 
         self.supCDF = []
         for ii, (quantile, h) in enumerate(self.CDF):

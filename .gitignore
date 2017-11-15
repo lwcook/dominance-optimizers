@@ -10,5 +10,7 @@ dominance_optimizers.egg-info/*
 examples/output/*
 examples/figs/*
 
+build/*
+
 *_old.py
 _trystuff.py

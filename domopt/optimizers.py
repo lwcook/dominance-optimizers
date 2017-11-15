@@ -43,16 +43,35 @@ class Optimization(object):
 
     The optimizer scales the design variables to range over [0,10] so that
     an algorithm's methods operate over an appropriate scaled space.
+
+    :param function evaluator: Function that takes a vector of design variables
+        and returns an object that can be compared via < and == operators.
+
+    :param list bounds: List of bounds on design variables in the form
+        [(l0, u0), (l1, u1), ..., (ln, un)] where lb, uk are the lower and upper
+        bounds on the kth design variable respectively.
+
+    :param function observer: User defined function that is called every time
+        a Point is evaluated, it is passed the current Point, the current
+        non-dominated archive, and the list of all points visited.
+        It should be able to be called by myObserver(point, archive, history)
+
     """
 
-    def __init__(self, evaluator, bounds):
+    def __init__(self, evaluator, bounds, observer=None):
 
         self.bounds = bounds
         self.evaluator = evaluator
-        self.LTM = []
+        if observer is None:
+            self.observer = lambda point, archive, visited: None
+        else:
+            self.observer = observer
 
-        self.opt_ub = 10.0
-        self.opt_lb = 0.0
+        self.history = [] # Log of all Points visited
+        self.archive = [] # Archive of non-dominated Points
+
+        self.opt_ub = 10.0 # Upper bound for scaling of design variables
+        self.opt_lb = 0.0  # Lower bound for scaling of design variables
 
         self.num_evaluations = 0
 
@@ -86,23 +105,29 @@ class Optimization(object):
                 (dvi - self.bounds[i][0])/(self.bounds[i][1] - self.bounds[i][0]))
                 for i, dvi in enumerate(design_variables)]
 
-    def evalDV(self, x):
+    def evalDV(self, DV):
         self.num_evaluations += 1
         return self.evaluator(DV)
 
     def evalX(self, x):
-        return self.evaluator(self.scaleXtoDV(x))
+        return self.evalDV(self.scaleXtoDV(x))
 
-    def pointFromX(self, x):
+    def pointFromX(self, x, bArchive=True):
         x = [xi for xi in x]
-        visited_xs = [y for (y, fy) in self.LTM]
+        visited_xs = [y for (y, fy) in self.history]
         if x in visited_xs:
-            other = copy.copy(self.LTM[visited_xs.index(x)])
+            other = copy.copy(self.history[visited_xs.index(x)])
             point = copy.copy(other)
         else:
             f = self.evalX(x)
             point = Point(x, f)
-            self.LTM.append(point)
+            self.history.append(point)
+
+        if bArchive:
+            self.addIfNotDominated(point, self.archive)
+            self.archive = self.removeDominatedPoints(point, self.archive)
+
+        self.observer(point, self.archive, self.history)
 
         return point
 
@@ -127,4 +152,3 @@ class Optimization(object):
 
         memory.append(A)
         return True
-

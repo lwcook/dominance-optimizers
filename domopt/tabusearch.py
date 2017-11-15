@@ -10,25 +10,18 @@ from optimizers import Optimization, Point
 class TabuSearch(Optimization):
     """Tabu search for non-dominance based optimization.
 
-    :param function evaluator: Function that takes a vector of design variables
-        and returns an object that can be compared via < and == operators.
-
-    :param list bounds: List of bounds on design variables in the form
-        [(l0, u0), (l1, u1), ..., (ln, un)] where lb, uk are the lower and upper
-        bounds on the kth design variable respectively.
-
     """
 
-    def __init__(self, evaluator, bounds,
+    def __init__(self, evaluator, bounds, observer=None,
             max_points=200, verbose=False, search_method='exhaustive'):
 
-        super(TabuSearch, self).__init__(evaluator, bounds)
+        super(TabuSearch, self).__init__(evaluator, bounds, observer)
 
         self.STM = []
 
         self.IM = []
         self.MTM = []
-        self.LTM = []
+        self.archive = self.MTM
 
         self.STMsize = 10
         self.intensify_count = 10
@@ -47,7 +40,10 @@ class TabuSearch(Optimization):
         self.intensify_method = 'mixture'
 
     def shouldTerminate(self):
-        return len(self.LTM) > self.max_points
+        return len(self.history) >= self.max_points
+
+    def pointFromX(self, x):
+        return super(TabuSearch, self).pointFromX(x, bArchive=False)
 
     def optimize(self, dv0=None, verbose=None):
         """Performs the genetic algorithm optimization.
@@ -78,7 +74,7 @@ class TabuSearch(Optimization):
 
             if add_to_STM:
                 if verbose:
-                    print(len(self.LTM))
+                    print(len(self.history))
 
                 self.STM.insert(0, base)
                 if len(self.STM) > self.STMsize:
@@ -153,6 +149,7 @@ class TabuSearch(Optimization):
             for point in visited_points:
                 self.addIfNotDominated(point, self.MTM)
                 self.MTM = self.removeDominatedPoints(point, self.MTM)
+            self.archive = self.MTM
 
             if counter >= self.reduce_count:
                 move = 'reduction'
@@ -286,12 +283,13 @@ class TabuSearch(Optimization):
         return self.bounder([xi for xi in new_x])
 
     def doDiversification(self, tol=3):
+        LTM = self.history
         self.step_size = self.orig_step_size/2.
-        dim = len(self.LTM[0][0])
+        dim = len(LTM[0][0])
 
         new_x = [random.uniform(0, 10) for x in np.arange(dim)]
         D = 100
-        for point in self.LTM:
+        for point in LTM:
             D = min(np.linalg.norm(np.array(new_x) -
                     np.array(point[0])), D)
 
