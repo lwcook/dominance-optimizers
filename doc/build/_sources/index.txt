@@ -11,7 +11,7 @@ Contents:
 .. _Here: www-edc.eng.cam.ac.uk/aerotools/dominanceoptimizers
 
 .. automodule:: domopt
-    :members: Point, Stochastic, GeneticAlgorithm, TabuSearch, Optimization
+    :members: Point, Stochastic, GeneticAlgorithm, TabuSearch, Optimization, PolySurrogate
 
 .. toctree::
    :maxdepth: 2

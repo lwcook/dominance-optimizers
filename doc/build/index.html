@@ -120,24 +120,9 @@ using the minimum and maximum of the samples.</p>
 
 <dl class="class">
 <dt id="domopt.GeneticAlgorithm">
-<em class="property">class </em><tt class="descclassname">domopt.</tt><tt class="descname">GeneticAlgorithm</tt><big>(</big><em>evaluator</em>, <em>bounds</em>, <em>population_size=100</em>, <em>max_generations=50</em>, <em>verbose=False</em><big>)</big><a class="headerlink" href="#domopt.GeneticAlgorithm" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">domopt.</tt><tt class="descname">GeneticAlgorithm</tt><big>(</big><em>evaluator</em>, <em>bounds</em>, <em>observer=None</em>, <em>population_size=100</em>, <em>max_generations=50</em>, <em>verbose=False</em><big>)</big><a class="headerlink" href="#domopt.GeneticAlgorithm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evolutionary computation representing the nondominated
 sorting genetic algorithm under uncertainty.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>evaluator</strong> (<em>function</em>) &#8211; Function that takes a vector of design variables
-and returns an object that can be compared via &lt; and == operators.</li>
-<li><strong>bounds</strong> (<em>list</em>) &#8211; List of bounds on design variables in the form
-[(l0, u0), (l1, u1), ..., (ln, un)] where lb, uk are the lower and upper
-bounds on the kth design variable respectively.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
 <dl class="method">
 <dt id="domopt.GeneticAlgorithm.optimize">
 <tt class="descname">optimize</tt><big>(</big><em>seeds=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#domopt.GeneticAlgorithm.optimize" title="Permalink to this definition">¶</a></dt>
@@ -162,23 +147,8 @@ optimization.</td>
 
 <dl class="class">
 <dt id="domopt.TabuSearch">
-<em class="property">class </em><tt class="descclassname">domopt.</tt><tt class="descname">TabuSearch</tt><big>(</big><em>evaluator</em>, <em>bounds</em>, <em>max_points=200</em>, <em>verbose=False</em>, <em>search_method='exhaustive'</em><big>)</big><a class="headerlink" href="#domopt.TabuSearch" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">domopt.</tt><tt class="descname">TabuSearch</tt><big>(</big><em>evaluator</em>, <em>bounds</em>, <em>observer=None</em>, <em>max_points=200</em>, <em>verbose=False</em>, <em>search_method='exhaustive'</em><big>)</big><a class="headerlink" href="#domopt.TabuSearch" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tabu search for non-dominance based optimization.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>evaluator</strong> (<em>function</em>) &#8211; Function that takes a vector of design variables
-and returns an object that can be compared via &lt; and == operators.</li>
-<li><strong>bounds</strong> (<em>list</em>) &#8211; List of bounds on design variables in the form
-[(l0, u0), (l1, u1), ..., (ln, un)] where lb, uk are the lower and upper
-bounds on the kth design variable respectively.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
 <dl class="method">
 <dt id="domopt.TabuSearch.optimize">
 <tt class="descname">optimize</tt><big>(</big><em>dv0=None</em>, <em>verbose=None</em><big>)</big><a class="headerlink" href="#domopt.TabuSearch.optimize" title="Permalink to this definition">¶</a></dt>
@@ -202,7 +172,7 @@ optimization.</td>
 
 <dl class="class">
 <dt id="domopt.Optimization">
-<em class="property">class </em><tt class="descclassname">domopt.</tt><tt class="descname">Optimization</tt><big>(</big><em>evaluator</em>, <em>bounds</em><big>)</big><a class="headerlink" href="#domopt.Optimization" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">domopt.</tt><tt class="descname">Optimization</tt><big>(</big><em>evaluator</em>, <em>bounds</em>, <em>observer=None</em><big>)</big><a class="headerlink" href="#domopt.Optimization" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for optimziations operating on Point objects.</p>
 <p>Designs are stored as Point objects - the first entry is what the optimizer
 controls (i.e. scaled design variables), the second entry is an object
@@ -212,6 +182,184 @@ it must have a comparison operator.</p>
 general non-dominance criteria to be used.</p>
 <p>The optimizer scales the design variables to range over [0,10] so that
 an algorithm&#8217;s methods operate over an appropriate scaled space.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>evaluator</strong> (<em>function</em>) &#8211; Function that takes a vector of design variables
+and returns an object that can be compared via &lt; and == operators.</li>
+<li><strong>bounds</strong> (<em>list</em>) &#8211; List of bounds on design variables in the form
+[(l0, u0), (l1, u1), ..., (ln, un)] where lb, uk are the lower and upper
+bounds on the kth design variable respectively.</li>
+<li><strong>observer</strong> (<em>function</em>) &#8211; User defined function that is called every time
+a Point is evaluated, it is passed the current Point, the current
+non-dominated archive, and the list of all points visited.
+It should be able to be called by myObserver(point, archive, history)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="domopt.PolySurrogate">
+<em class="property">class </em><tt class="descclassname">domopt.</tt><tt class="descname">PolySurrogate</tt><big>(</big><em>dimensions</em>, <em>order=3</em>, <em>poly_type='legendre'</em><big>)</big><a class="headerlink" href="#domopt.PolySurrogate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for creating surrogate models using non-intrusive polynomial
+chaos.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dimensions</strong> (<em>int</em>) &#8211; number of dimensions of the polynomial expansion</li>
+<li><strong>order</strong> (<em>int</em>) &#8211; order of the polynomial expansion [default 3]</li>
+<li><strong>poly_type</strong> (<em>str/list</em>) &#8211; string of the type of polynomials to use in the
+expansion, or list of strings where each entry in the list is the type
+of polynomial to use in the corresponding dimension. Supported
+polynomial types are legendre and gaussian. [default legendre]</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p><em>Example Declaration</em>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">thePC</span> <span class="o">=</span> <span class="n">PolySurrogate</span><span class="p">(</span><span class="n">dimensions</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">thePC</span> <span class="o">=</span> <span class="n">PolySurrogate</span><span class="p">(</span><span class="n">dimensions</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">thePC</span> <span class="o">=</span> <span class="n">PolySurrogate</span><span class="p">(</span><span class="n">dimensions</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">poly_type</span><span class="o">=</span><span class="s1">&#39;legendre&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="domopt.PolySurrogate.getQuadraturePoints">
+<tt class="descname">getQuadraturePoints</tt><big>(</big><big>)</big><a class="headerlink" href="#domopt.PolySurrogate.getQuadraturePoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the quadrature points at which the output values must be found
+in order to train the polynomial expansion using gaussian quadrature.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">upoints - a np.ndarray of size (num_polynomials, num_dimensions)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">np.ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="domopt.PolySurrogate.getQuadraturePointsAndWeights">
+<tt class="descname">getQuadraturePointsAndWeights</tt><big>(</big><big>)</big><a class="headerlink" href="#domopt.PolySurrogate.getQuadraturePointsAndWeights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the quadrature points and weights for gaussian quadrature
+integration of inner products from the definition of the polynomials in
+each dimension.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(u_points, w_points) - np.ndarray of shape
+(num_polynomials, num_dimensions) and a np.ndarray of size
+(num_polynomials)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">(np.ndarray, np.ndarray)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="domopt.PolySurrogate.predict">
+<tt class="descname">predict</tt><big>(</big><em>u</em><big>)</big><a class="headerlink" href="#domopt.PolySurrogate.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predicts the output value at u from the fitted polynomial expansion.
+Therefore the method train() must be called first.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>u</strong> (<em>numpy.ndarray</em>) &#8211; input value at which to predict the output.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">q_approx - the predicted value of the output at u</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+<p><em>Sample Usage</em>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">thePC</span> <span class="o">=</span> <span class="n">PolySurrogate</span><span class="p">(</span><span class="n">dimensions</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">U</span> <span class="o">=</span> <span class="n">thePC</span><span class="o">.</span><span class="n">getQuadraturePoints</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Q</span> <span class="o">=</span> <span class="p">[</span><span class="n">myFunc</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">U</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">thePC</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">Q</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">thePC</span><span class="o">.</span><span class="n">predict</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="domopt.PolySurrogate.surrogate">
+<tt class="descname">surrogate</tt><big>(</big><em>u_sparse</em>, <em>q_sparse</em><big>)</big><a class="headerlink" href="#domopt.PolySurrogate.surrogate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Combines the train and predict methods to create a surrogate
+model function fitted to the input/output combinations given in
+u_sparse and q_sparse.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>u_sparse</strong> (<em>numpy.ndarray</em>) &#8211; input values at which the output
+values are obtained.  Must be the same as the qaudrature
+points defined by the getQuadraturePoints method.</li>
+<li><strong>q_sparse</strong> (<em>numpy.ndarray</em>) &#8211; output values corresponding
+to the input values given in u_sparse to which the
+surrogate is fitted</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">surrogate model fitted to u_sparse and q_sparse</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">function</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p><em>Sample Usage</em>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">thePC</span> <span class="o">=</span> <span class="n">PolySurrogate</span><span class="p">(</span><span class="n">dimensions</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">U</span> <span class="o">=</span> <span class="n">thePC</span><span class="o">.</span><span class="n">getQuadraturePoints</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Q</span> <span class="o">=</span> <span class="p">[</span><span class="n">myFunc</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">U</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">surrogateFunc</span> <span class="o">=</span> <span class="n">thePC</span><span class="o">.</span><span class="n">surrogate</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">Q</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="domopt.PolySurrogate.train">
+<tt class="descname">train</tt><big>(</big><em>ftrain</em><big>)</big><a class="headerlink" href="#domopt.PolySurrogate.train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trains the polynomial expansion.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ftrain</strong> (<em>numpy.ndarray/function</em>) &#8211; output values corresponding to the
+quadrature points given by the getQuadraturePoints method to
+which the expansion should be trained. Or a function that should be evaluated
+at the quadrature points to give these output values.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Sample Usage</em>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">thePC</span> <span class="o">=</span> <span class="n">PolySurrogate</span><span class="p">(</span><span class="n">dimensions</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">thePC</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">myFunc</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">predicted_q</span> <span class="o">=</span> <span class="n">thePC</span><span class="o">.</span><span class="n">predict</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">thePC</span> <span class="o">=</span> <span class="n">PolySurrogate</span><span class="p">(</span><span class="n">dimensions</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">U</span> <span class="o">=</span> <span class="n">thePC</span><span class="o">.</span><span class="n">getQuadraturePoints</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Q</span> <span class="o">=</span> <span class="p">[</span><span class="n">myFunc</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">U</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">thePC</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">predicted_q</span> <span class="o">=</span> <span class="n">thePC</span><span class="o">.</span><span class="n">predict</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+</dd></dl>
+
 </dd></dl>
 
 <div class="toctree-wrapper compound">
